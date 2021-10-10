@@ -71,13 +71,11 @@ class RoleTest extends TestCase
     protected function setUp(): void
     {
         $this->groupFactoryMock = $this->getMockBuilder(GroupFactory::class)
-            ->onlyMethods(['create'])
-            ->addMethods(['getModelInstance'])
+            ->setMethods(['create', 'getModelInstance'])
             ->disableOriginalConstructor()
             ->getMock();
         $this->roleFactoryMock = $this->getMockBuilder(UserFactory::class)
-            ->onlyMethods(['create'])
-            ->addMethods(['getModelInstance'])
+            ->setMethods(['create', 'getModelInstance'])
             ->disableOriginalConstructor()
             ->getMock();
         $this->resourceMock = $this->createMock(ResourceConnection::class);
@@ -121,11 +119,9 @@ class RoleTest extends TestCase
     }
 
     /**
-     * Test populating acl roles with children.
-     *
-     * @return void
+     * Test populating acl roles with children
      */
-    public function testPopulateAclAddsRolesAndTheirChildren(): void
+    public function testPopulateAclAddsRolesAndTheirChildren()
     {
         $this->resourceMock->expects($this->once())
             ->method('getTableName')
@@ -145,7 +141,7 @@ class RoleTest extends TestCase
             ->willReturn(
                 [
                     ['role_id' => 1, 'role_type' => 'G', 'parent_id' => null],
-                    ['role_id' => 2, 'role_type' => 'U', 'parent_id' => 1, 'user_id' => 1]
+                    ['role_id' => 2, 'role_type' => 'U', 'parent_id' => 1, 'user_id' => 1],
                 ]
             );
 
@@ -153,22 +149,16 @@ class RoleTest extends TestCase
         $this->roleFactoryMock->expects($this->once())->method('create')->with(['roleId' => '2']);
 
         $aclMock = $this->createMock(Acl::class);
-        $aclMock
-            ->method('addRole')
-            ->withConsecutive(
-                [$this->anything(), null],
-                [$this->anything(), '1']
-            );
+        $aclMock->expects($this->at(0))->method('addRole')->with($this->anything(), null);
+        $aclMock->expects($this->at(2))->method('addRole')->with($this->anything(), '1');
 
         $this->model->populateAcl($aclMock);
     }
 
     /**
-     * Test populating acl role with multiple parents.
-     *
-     * @return void
+     * Test populating acl role with multiple parents
      */
-    public function testPopulateAclAddsMultipleParents(): void
+    public function testPopulateAclAddsMultipleParents()
     {
         $this->resourceMock->expects($this->once())
             ->method('getTableName')
@@ -191,23 +181,16 @@ class RoleTest extends TestCase
         $this->groupFactoryMock->expects($this->never())->method('getModelInstance');
 
         $aclMock = $this->createMock(Acl::class);
-        $aclMock
-            ->method('hasRole')
-            ->with('1')
-            ->willReturn(true);
-        $aclMock
-            ->method('addRoleParent')
-            ->with('1', '2');
+        $aclMock->expects($this->at(0))->method('hasRole')->with('1')->willReturn(true);
+        $aclMock->expects($this->at(1))->method('addRoleParent')->with('1', '2');
 
         $this->model->populateAcl($aclMock);
     }
 
     /**
-     * Test populating acl role from cache.
-     *
-     * @return void
+     * Test populating acl role from cache
      */
-    public function testPopulateAclFromCache(): void
+    public function testPopulateAclFromCache()
     {
         $this->resourceMock->expects($this->never())->method('getConnection');
         $this->resourceMock->expects($this->never())->method('getTableName');
@@ -232,13 +215,8 @@ class RoleTest extends TestCase
         $this->groupFactoryMock->expects($this->never())->method('getModelInstance');
 
         $aclMock = $this->createMock(Acl::class);
-        $aclMock
-            ->method('hasRole')
-            ->with('1')
-            ->willReturn(true);
-        $aclMock
-            ->method('addRoleParent')
-            ->with('1', '2');
+        $aclMock->expects($this->at(0))->method('hasRole')->with('1')->willReturn(true);
+        $aclMock->expects($this->at(1))->method('addRoleParent')->with('1', '2');
 
         $this->model->populateAcl($aclMock);
     }
